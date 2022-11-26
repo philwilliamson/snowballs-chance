@@ -107,7 +107,14 @@ const snowBallEntity: SnowBall = {
   vel: new Vector2,
 };
 
+// TEXTURES
+const loader = new THREE.TextureLoader();
+const bgTexture = loader.load('/textures/sky_dark.jpg');
+bgTexture.center.set(.5, .5);
+bgTexture.rotation = THREE.MathUtils.degToRad(-90);
+
 const scene = new THREE.Scene();
+scene.background = bgTexture;
 
 const fov = 40;
 const aspect = 2;  // the canvas default
