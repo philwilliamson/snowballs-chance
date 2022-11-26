@@ -162,11 +162,16 @@ function PrimitivesDemoPage() {
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
 
-      function animate() {
+      let previousTimestamp = 0;
+      
+      function animate(time: number) {
 
+        const elapsed = time - previousTimestamp;
+        previousTimestamp = time;
 
-        snowBallEntity.vel.clamp(new Vector2(-1*maxVel, -1*maxVel), new Vector2(maxVel, maxVel));
-        snowBallEntity.entityMesh.position.add(new Vector3(snowBallEntity.vel.x, snowBallEntity.vel.y, 0));
+        snowBallEntity.entityMesh.position.add(
+          new Vector3(snowBallEntity.vel.x, snowBallEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
+        );
 
         snowBallEntity.entityMesh.position.clamp(new Vector3(-50, -30, 0), new Vector3(50, 30, 0));
 
