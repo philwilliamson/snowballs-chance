@@ -1,9 +1,15 @@
 import "./App.css"
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { BufferGeometry, Mesh, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
+import { BufferGeometry, Material, Mesh, MeshPhongMaterial, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
 import WebGL from './util/webGlChecker';
 
+interface SnowBall {
+  entityMesh: Mesh,
+  vel: Vector2,
+}
+
+// CONSTANTS
 const maxSnowballVel = 1.2;
 const maxSnowballPosX = 100;
 const maxSnowballPosY = 50;
@@ -11,13 +17,16 @@ const maxSnowballPosY = 50;
 const maxFireballPosX = 100;
 const maxFireballPosY = 50;
 
-let gameStart = false;
+const snowballRadius = 8;
+const fireBallRadius = 8;
 
-// INTERFACES
-interface SnowBall {
-  entityMesh: Mesh,
-  vel: Vector2,
-}
+// FLAGS
+let gameStarted = false;
+let collision = false;
+
+// LOOKUP TARGETS
+const iterFireballWorldPos = new Vector3(); // for storing world pos of fireball when detecting collisions
+
 
 // HELPERS
 function resizeRendererToDisplaySize(renderer:WebGLRenderer) {
@@ -32,7 +41,7 @@ function resizeRendererToDisplaySize(renderer:WebGLRenderer) {
 }
 
 function keyDownEventListener(e: KeyboardEvent){
-  gameStart = true;
+  gameStarted = true;
 
   const downedKey = e.key;
   switch(downedKey) {
@@ -150,10 +159,9 @@ camera.position.z = 150;
 
 // SNOWBALL
 {
-  const radius = 5;
   const widthSegments = 8;
   const heightSegments = 8;
-  const snowBallGeom = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+  const snowBallGeom = new THREE.SphereGeometry(snowballRadius, widthSegments, heightSegments);
   const snowBallMat = new THREE.MeshPhongMaterial({
     color: 0xFFFFFF
   });
@@ -169,19 +177,19 @@ const fireBallGroup = new THREE.Object3D();
 scene.add(fireBallGroup);
 
 {
-  const radius = 5;
   const widthSegments = 8;
   const heightSegments = 8;
-  const fireBallGeom = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-  const fireBallMat = new THREE.MeshPhongMaterial({
-    color: 0xFF0000
-  });
+  const fireBallGeom = new THREE.SphereGeometry(fireBallRadius, widthSegments, heightSegments);
 
-  for (let idx = 0; idx < 400; idx++){
+  for (let idx = 0; idx < 300; idx++){
     const xPos = Math.random() * (2 * maxFireballPosX) - maxFireballPosX;
     const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
-    const zPos = -12 * idx - 100;
-    const fireBallMesh = new THREE.Mesh(fireBallGeom, fireBallMat);
+    const zPos = -30 * idx - 500;
+    const fireBallMesh = new THREE.Mesh(
+      fireBallGeom,
+      new THREE.MeshPhongMaterial({
+        color: 0xFF0000
+      }));
     fireBallMesh.position.set(xPos, yPos, zPos);
     fireBallGroup.add(fireBallMesh);
     fireBalls.push(fireBallMesh);
@@ -194,6 +202,9 @@ scene.add(fireBallGroup);
 function PrimitivesDemoPage() {
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const [anyKeyPressed, setAnyKeyPressed] = useState(false);
+  const [showCollisionMessage, setShowCollistionMessage] = useState(false);
+
   useEffect(() => {
     if ( WebGL.isWebGLAvailable() ) {
 
@@ -201,9 +212,14 @@ function PrimitivesDemoPage() {
       renderer.domElement.id = "renderer_canvas";
       containerRef.current?.appendChild( renderer.domElement );
 
-      // add event listeners
+      // add event listeners affecting threejs scene
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
+
+      // add event listeners for affecting React DOM
+      window.addEventListener("keydown", () => {
+        setAnyKeyPressed(true);
+      });
 
       let previousTimestamp = 0;
       
@@ -213,9 +229,24 @@ function PrimitivesDemoPage() {
         previousTimestamp = time;
 
         // move fireballs
-        if(gameStart){
+        if(gameStarted && !collision){
           fireBallGroup.position.z += 0.2 * elapsed;
         }
+
+        // detect collision
+        fireBalls.forEach((fireball)=>{
+          fireball.getWorldPosition(iterFireballWorldPos);
+          const distance = snowBallEntity.entityMesh.position.distanceTo(iterFireballWorldPos);
+          if (distance < snowballRadius + fireBallRadius){
+            const fireballMat = fireball.material as MeshPhongMaterial;
+            fireballMat.emissive.setHex(0xff0000);
+            collision = true;
+            setShowCollistionMessage(true);
+          }
+          if (iterFireballWorldPos.z > 10){
+            fireBallGroup.remove(fireball);
+          }
+        })
 
         snowBallEntity.entityMesh.position.add(
           new Vector3(snowBallEntity.vel.x, snowBallEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
@@ -252,6 +283,9 @@ function PrimitivesDemoPage() {
         // remove event listeners
         window.removeEventListener("keydown", keyDownEventListener);
         window.removeEventListener("keyup", keyUpEventListener);
+        window.removeEventListener("keydown", () => {
+          setAnyKeyPressed(true);
+        });
       }
 
     } else {
@@ -265,7 +299,15 @@ function PrimitivesDemoPage() {
   },[])
 
   return (
-    <div ref={containerRef} id="canvas_container"></div>
+      <div ref={containerRef} id="viewport_container">
+        <div id="message_container">
+          <h1>
+            {anyKeyPressed || "Press Any Key to Begin"}
+            {showCollisionMessage && "You Melted!"}
+          </h1>
+        </div>
+      </div>
+      
   )
 }
 

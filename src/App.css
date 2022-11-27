@@ -2,12 +2,19 @@ html, body, #root {
   margin: 0;
   height: 100%;
 }
-#canvas_container {
+#viewport_container {
   margin: 0;
   height: 100%;
   display: block;
+  position: relative;
 }
 #renderer_canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#message_container{
+  position: absolute;
   width: 100%;
   height: 100%;
   display: block;
