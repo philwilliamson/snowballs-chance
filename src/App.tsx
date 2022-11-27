@@ -10,7 +10,7 @@ interface PlayerEntity {
 }
 
 // CONSTANTS
-const maxSnowballVel = 1.5;
+const maxSnowballVel = 1.8;
 const maxSnowballPosX = 90;
 const maxSnowballPosY = 90;
 
@@ -23,6 +23,9 @@ const fireballRadius = 20;
 const fireballNum = 500;
 const fireballSpeed = 0.3;
 const fireballSpacing = 40;
+
+const ringNum = 11;
+const ringSpacing = fireballNum * fireballSpacing / (ringNum - 1);
 
 // FLAGS
 let gameStarted = false;
@@ -136,7 +139,7 @@ scene.add(playerEntity.entityObject3D);
 const fov = 50;
 const aspect = 2;  // the canvas default
 const near = 0.1;
-const far = 3000;
+const far = 10000;
 const camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
 camera.position.set(0, 10, 60);
 
@@ -174,8 +177,8 @@ playerEntity.entityObject3D.add(snowball);
 
 // FIREBALLS
 const fireballs: Mesh[] = [];
-const fireballGroup = new THREE.Object3D();
-scene.add(fireballGroup);
+const obstacleGroup = new THREE.Object3D();
+scene.add(obstacleGroup);
 
 {
   const widthSegments = 8;
@@ -189,14 +192,31 @@ scene.add(fireballGroup);
     const fireballMesh = new THREE.Mesh(
       fireballGeom,
       new THREE.MeshPhongMaterial({
-        color: 0xFF0000
+        color: 0xFF0000,
+        emissive: 0x440000
       }));
     fireballMesh.position.set(xPos, yPos, zPos);
-    fireballGroup.add(fireballMesh);
+    obstacleGroup.add(fireballMesh);
     fireballs.push(fireballMesh);
-  }
+  }  
+}
 
-  
+// RINGS
+{
+  const radius = 200;
+  const tubeRadius = 30;
+  const radialSegments = 8;
+  const tubularSegments = 24;
+  for (let idx = 0; idx < ringNum; idx++){
+    const zPos = -1 * ringSpacing * idx - 500;
+    const ringMesh = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments),
+    new THREE.MeshPhongMaterial({
+      color: 0xFF0000,
+    }));
+    ringMesh.position.set(0, 0, zPos);
+    obstacleGroup.add(ringMesh);
+  }  
 }
 
 // MAIN PAGE
@@ -231,7 +251,7 @@ function PrimitivesDemoPage() {
 
         // move fireballs
         if(gameStarted && !collision){
-          fireballGroup.position.z += fireballSpeed * elapsed;
+          obstacleGroup.position.z += fireballSpeed * elapsed;
         }
 
         // detect collision
@@ -245,9 +265,6 @@ function PrimitivesDemoPage() {
             fireballMat.emissive.setHex(0xff0000);
             collision = true;
             setShowCollistionMessage(true);
-          }
-          if (iterFireballWorldPos.z > 10){
-            fireballGroup.remove(fireball);
           }
         })
 
