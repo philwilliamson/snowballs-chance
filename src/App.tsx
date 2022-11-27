@@ -10,15 +10,19 @@ interface PlayerEntity {
 }
 
 // CONSTANTS
-const maxSnowballVel = 2;
-const maxSnowballPosX = 200;
-const maxSnowballPosY = 200;
+const maxSnowballVel = 1.5;
+const maxSnowballPosX = 90;
+const maxSnowballPosY = 90;
 
-const maxFireballPosX = 250;
-const maxFireballPosY = 250;
+const maxFireballPosX = 100;
+const maxFireballPosY = 100;
 
-const snowballRadius = 4;
-const fireballRadius = 50;
+const snowballRadius = 5;
+const fireballRadius = 20;
+
+const fireballNum = 500;
+const fireballSpeed = 0.3;
+const fireballSpacing = 40;
 
 // FLAGS
 let gameStarted = false;
@@ -132,7 +136,7 @@ scene.add(playerEntity.entityObject3D);
 const fov = 50;
 const aspect = 2;  // the canvas default
 const near = 0.1;
-const far = 1000;
+const far = 3000;
 const camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
 camera.position.set(0, 10, 60);
 
@@ -178,10 +182,10 @@ scene.add(fireballGroup);
   const heightSegments = 8;
   const fireballGeom = new THREE.SphereGeometry(fireballRadius, widthSegments, heightSegments);
 
-  for (let idx = 0; idx < 300; idx++){
+  for (let idx = 0; idx < fireballNum; idx++){
     const xPos = Math.random() * (2 * maxFireballPosX) - maxFireballPosX;
     const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
-    const zPos = -30 * idx - 500;
+    const zPos = -1 * fireballSpacing * idx - 500;
     const fireballMesh = new THREE.Mesh(
       fireballGeom,
       new THREE.MeshPhongMaterial({
@@ -227,7 +231,7 @@ function PrimitivesDemoPage() {
 
         // move fireballs
         if(gameStarted && !collision){
-          fireballGroup.position.z += 0.2 * elapsed;
+          fireballGroup.position.z += fireballSpeed * elapsed;
         }
 
         // detect collision
