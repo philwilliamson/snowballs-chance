@@ -1,8 +1,9 @@
-import "./App.css"
 import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Mesh, MeshPhongMaterial, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
 import WebGL from './util/webGlChecker';
+import "./App.css"
+import OverlayMessage from './components/OverlayMessage';
 
 interface PlayerEntity {
   entityObject3D: Object3D,
@@ -24,12 +25,16 @@ const fireballNum = 500;
 const fireballSpeed = 0.3;
 const fireballSpacing = 40;
 
+const leadingDistance = 500;
+
 const ringNum = 11;
 const ringSpacing = fireballNum * fireballSpacing / (ringNum - 1);
+const lastRingPosZ = ringSpacing * (ringNum - 1) + leadingDistance;
 
 // FLAGS
 let gameStarted = false;
 let gameOver = false;
+let gameWon = false;
 
 // LOOKUP TARGETS
 const iterFireballWorldPos = new Vector3(); // for storing world pos of fireball when detecting collisions
@@ -83,16 +88,15 @@ function keyDownEventListener(e: KeyboardEvent){
         }
       break;
     } 
-  } else if (gameOver) {
+  } else {
     gameStarted = false;
     gameOver = false;
+    gameWon = false;
     obstacleGroup.position.set(0,0,0);
-    const fireballMat = collidedFireball.material as MeshPhongMaterial;
-    fireballMat.emissive.setHex(0x440000);
+    const fireballMat = collidedFireball?.material as MeshPhongMaterial;
+    fireballMat?.emissive?.setHex(0x440000);
     playerEntity.entityObject3D.position.set(0, 0, 0);
   }
-
-  
 }
 
 function keyUpEventListener(e: KeyboardEvent){
@@ -199,7 +203,7 @@ scene.add(obstacleGroup);
   for (let idx = 0; idx < fireballNum; idx++){
     const xPos = Math.random() * (2 * maxFireballPosX) - maxFireballPosX;
     const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
-    const zPos = -1 * fireballSpacing * idx - 500;
+    const zPos = -1 * fireballSpacing * idx - leadingDistance;
     const fireballMesh = new THREE.Mesh(
       fireballGeom,
       new THREE.MeshPhongMaterial({
@@ -240,6 +244,7 @@ function PrimitivesDemoPage() {
 
   const [showStartMessage, setShowStartMessage] = useState(true);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [showWinMessage, setShowWinMessage] = useState(false);
 
   useEffect(() => {
     if ( WebGL.isWebGLAvailable() ) {
@@ -254,13 +259,17 @@ function PrimitivesDemoPage() {
       let previousTimestamp = 0;
       
       function animate(time: number) {
-
         const elapsed = time - previousTimestamp;
         previousTimestamp = time;
 
         // move fireballs
         if(gameStarted && !gameOver){
           obstacleGroup.position.z += fireballSpeed * elapsed;
+          if (obstacleGroup.position.z >= lastRingPosZ){
+            gameOver = true;
+            gameWon = true;
+            setShowWinMessage(true);
+          }
 
           // detect collision
           fireballs.forEach((fireball)=>{
@@ -295,12 +304,16 @@ function PrimitivesDemoPage() {
           playerEntity.vel.setY(0);
         }
 
+        setShowStartMessage(false);
+        setShowGameOver(false);
+        setShowWinMessage(false);
+        
         // update DOM
-        if(!gameStarted && !gameOver){
+        if(!gameStarted){
           setShowStartMessage(true);
-          setShowGameOver(false);
+        } else if (gameWon) {
+          setShowWinMessage(true);
         } else if (gameOver){
-          setShowStartMessage(false);
           setShowGameOver(true);
         }
 
@@ -339,10 +352,28 @@ function PrimitivesDemoPage() {
   return (
       <div ref={containerRef} id="viewport_container">
         <div id="message_container">
-          <h1>
-            {showStartMessage && "Press Any Key to Begin"}
-            {showGameOver && "You Melted!"}
-          </h1>
+          {
+            showStartMessage ? 
+              <OverlayMessage 
+                headerString={`Snowball's Chance`}
+                subHeaderString={`Press Any Key to Start`}
+                messageClassNames={`message game-start`}
+              />
+            :
+              showWinMessage
+              ?
+                <OverlayMessage 
+                  headerString={`You Win!`}
+                  subHeaderString={`Press Any Key to Play Again`}
+                  messageClassNames={`message game-won`}
+                />
+              :
+                showGameOver && <OverlayMessage 
+                  headerString={`You Melted!`}
+                  subHeaderString={`Press Any Key to Restart`}
+                  messageClassNames={`message game-over`}
+                />
+          }
         </div>
       </div>
       
