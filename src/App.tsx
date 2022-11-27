@@ -29,11 +29,12 @@ const ringSpacing = fireballNum * fireballSpacing / (ringNum - 1);
 
 // FLAGS
 let gameStarted = false;
-let collision = false;
+let gameOver = false;
 
 // LOOKUP TARGETS
 const iterFireballWorldPos = new Vector3(); // for storing world pos of fireball when detecting collisions
 const snowballWorldPos = new Vector3(); // for storing world pos of snowball when detecting collisions
+const collidedFireball = new Mesh();
 
 
 // HELPERS
@@ -49,39 +50,49 @@ function resizeRendererToDisplaySize(renderer:WebGLRenderer) {
 }
 
 function keyDownEventListener(e: KeyboardEvent){
-  gameStarted = true;
+  if (!gameOver) {
+    gameStarted = true;
+    const downedKey = e.key;
+    switch(downedKey) {
+      case "w":
+      case "W":
+      case "ArrowUp":
+        if (playerEntity.entityObject3D.position.y <= maxSnowballPosY) {
+          playerEntity.vel.setY(maxSnowballVel);
+        }
+      break;
+      case "a":
+      case "A":
+      case "ArrowLeft":
+        if (playerEntity.entityObject3D.position.x >= -1 * maxSnowballPosX) {
+          playerEntity.vel.setX(-1*maxSnowballVel);
+        }
+      break;
+      case "s":
+      case "S":
+      case "ArrowDown":
+        if (playerEntity.entityObject3D.position.y >= -1 * maxSnowballPosY) {
+          playerEntity.vel.setY(-1*maxSnowballVel);
+        }
+      break;
+      case "d":
+      case "D":
+      case "ArrowRight":
+        if (playerEntity.entityObject3D.position.x <= maxSnowballPosX) {
+          playerEntity.vel.setX(1*maxSnowballVel);
+        }
+      break;
+    } 
+  } else if (gameOver) {
+    gameStarted = false;
+    gameOver = false;
+    obstacleGroup.position.set(0,0,0);
+    const fireballMat = collidedFireball.material as MeshPhongMaterial;
+    fireballMat.emissive.setHex(0x440000);
+    playerEntity.entityObject3D.position.set(0, 0, 0);
+  }
 
-  const downedKey = e.key;
-  switch(downedKey) {
-    case "w":
-    case "W":
-    case "ArrowUp":
-      if (playerEntity.entityObject3D.position.y <= maxSnowballPosY) {
-        playerEntity.vel.setY(maxSnowballVel);
-      }
-    break;
-    case "a":
-    case "A":
-    case "ArrowLeft":
-      if (playerEntity.entityObject3D.position.x >= -1 * maxSnowballPosX) {
-        playerEntity.vel.setX(-1*maxSnowballVel);
-      }
-    break;
-    case "s":
-    case "S":
-    case "ArrowDown":
-      if (playerEntity.entityObject3D.position.y >= -1 * maxSnowballPosY) {
-        playerEntity.vel.setY(-1*maxSnowballVel);
-      }
-    break;
-    case "d":
-    case "D":
-    case "ArrowRight":
-      if (playerEntity.entityObject3D.position.x <= maxSnowballPosX) {
-        playerEntity.vel.setX(1*maxSnowballVel);
-      }
-    break;
-  } 
+  
 }
 
 function keyUpEventListener(e: KeyboardEvent){
@@ -219,12 +230,16 @@ scene.add(obstacleGroup);
   }  
 }
 
+// AUDIO
+const fireWhoosh = new Audio('/sounds/fire_whoosh.wav');
+fireWhoosh.loop = false;
+
 // MAIN PAGE
 function PrimitivesDemoPage() {
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const [anyKeyPressed, setAnyKeyPressed] = useState(false);
-  const [showCollisionMessage, setShowCollistionMessage] = useState(false);
+  const [showStartMessage, setShowStartMessage] = useState(true);
+  const [showGameOver, setShowGameOver] = useState(false);
 
   useEffect(() => {
     if ( WebGL.isWebGLAvailable() ) {
@@ -233,14 +248,8 @@ function PrimitivesDemoPage() {
       renderer.domElement.id = "renderer_canvas";
       containerRef.current?.appendChild( renderer.domElement );
 
-      // add event listeners affecting threejs scene
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
-
-      // add event listeners for affecting React DOM
-      window.addEventListener("keydown", () => {
-        setAnyKeyPressed(true);
-      });
 
       let previousTimestamp = 0;
       
@@ -250,28 +259,31 @@ function PrimitivesDemoPage() {
         previousTimestamp = time;
 
         // move fireballs
-        if(gameStarted && !collision){
+        if(gameStarted && !gameOver){
           obstacleGroup.position.z += fireballSpeed * elapsed;
+
+          // detect collision
+          fireballs.forEach((fireball)=>{
+            fireball.getWorldPosition(iterFireballWorldPos);
+            snowball.getWorldPosition(snowballWorldPos);
+            const distance = snowballWorldPos.distanceTo(iterFireballWorldPos);
+            // const fireballIsAhead = 
+            if(distance < snowballRadius + fireballRadius){
+              fireWhoosh.play();
+              const fireballMat = fireball.material as MeshPhongMaterial;
+              fireballMat.emissive.setHex(0xff0000);
+              collidedFireball.copy(fireball);
+              gameOver = true;
+              setShowGameOver(true);
+            }
+          })
+
+          playerEntity.entityObject3D.position.add(
+            new Vector3(playerEntity.vel.x, playerEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
+          );
         }
 
-        // detect collision
-        fireballs.forEach((fireball)=>{
-          fireball.getWorldPosition(iterFireballWorldPos);
-          snowball.getWorldPosition(snowballWorldPos);
-          const distance = snowballWorldPos.distanceTo(iterFireballWorldPos);
-          // const fireballIsAhead = 
-          if(distance < snowballRadius + fireballRadius){
-            const fireballMat = fireball.material as MeshPhongMaterial;
-            fireballMat.emissive.setHex(0xff0000);
-            collision = true;
-            setShowCollistionMessage(true);
-          }
-        })
-
-        playerEntity.entityObject3D.position.add(
-          new Vector3(playerEntity.vel.x, playerEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
-        );
-
+        // always clamp player position and conditionally reset velocity
         playerEntity.entityObject3D.position.clamp(new Vector3(-1*maxSnowballPosX, -1*maxSnowballPosY, 0), new Vector3(maxSnowballPosX, maxSnowballPosY, 0));
 
         // reset vel and acc if snowball is at clamp edge
@@ -281,6 +293,15 @@ function PrimitivesDemoPage() {
 
         if (playerEntity.entityObject3D.position.y === -1 * maxSnowballPosY || playerEntity.entityObject3D.position.y === maxSnowballPosY){
           playerEntity.vel.setY(0);
+        }
+
+        // update DOM
+        if(!gameStarted && !gameOver){
+          setShowStartMessage(true);
+          setShowGameOver(false);
+        } else if (gameOver){
+          setShowStartMessage(false);
+          setShowGameOver(true);
         }
 
         if (resizeRendererToDisplaySize(renderer)) {
@@ -303,9 +324,6 @@ function PrimitivesDemoPage() {
         // remove event listeners
         window.removeEventListener("keydown", keyDownEventListener);
         window.removeEventListener("keyup", keyUpEventListener);
-        window.removeEventListener("keydown", () => {
-          setAnyKeyPressed(true);
-        });
       }
 
     } else {
@@ -322,8 +340,8 @@ function PrimitivesDemoPage() {
       <div ref={containerRef} id="viewport_container">
         <div id="message_container">
           <h1>
-            {anyKeyPressed || "Press Any Key to Begin"}
-            {showCollisionMessage && "You Melted!"}
+            {showStartMessage && "Press Any Key to Begin"}
+            {showGameOver && "You Melted!"}
           </h1>
         </div>
       </div>
