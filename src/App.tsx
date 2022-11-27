@@ -4,7 +4,14 @@ import * as THREE from 'three';
 import { BufferGeometry, Mesh, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
 import WebGL from './util/webGlChecker';
 
-const maxVel = 1;
+const maxSnowballVel = 1.2;
+const maxSnowballPosX = 100;
+const maxSnowballPosY = 50;
+
+const maxFireballPosX = 100;
+const maxFireballPosY = 50;
+
+let gameStart = false;
 
 // INTERFACES
 interface SnowBall {
@@ -25,34 +32,36 @@ function resizeRendererToDisplaySize(renderer:WebGLRenderer) {
 }
 
 function keyDownEventListener(e: KeyboardEvent){
+  gameStart = true;
+
   const downedKey = e.key;
   switch(downedKey) {
     case "w":
     case "W":
     case "ArrowUp":
-      if (snowBallEntity.entityMesh.position.y <= 30) {
-        snowBallEntity.vel.setY(maxVel);
+      if (snowBallEntity.entityMesh.position.y <= maxSnowballPosY) {
+        snowBallEntity.vel.setY(maxSnowballVel);
       }
     break;
     case "a":
     case "A":
     case "ArrowLeft":
-      if (snowBallEntity.entityMesh.position.x >= -50) {
-        snowBallEntity.vel.setX(-1*maxVel);
+      if (snowBallEntity.entityMesh.position.x >= -1 * maxSnowballPosX) {
+        snowBallEntity.vel.setX(-1*maxSnowballVel);
       }
     break;
     case "s":
     case "S":
     case "ArrowDown":
-      if (snowBallEntity.entityMesh.position.y >= -30) {
-        snowBallEntity.vel.setY(-1*maxVel);
+      if (snowBallEntity.entityMesh.position.y >= -1 * maxSnowballPosY) {
+        snowBallEntity.vel.setY(-1*maxSnowballVel);
       }
     break;
     case "d":
     case "D":
     case "ArrowRight":
-      if (snowBallEntity.entityMesh.position.x <= 50) {
-        snowBallEntity.vel.setX(1*maxVel);
+      if (snowBallEntity.entityMesh.position.x <= maxSnowballPosX) {
+        snowBallEntity.vel.setX(1*maxSnowballVel);
       }
     break;
   } 
@@ -64,28 +73,28 @@ function keyUpEventListener(e: KeyboardEvent){
     case "w":
     case "W":
     case "ArrowUp":
-      if (snowBallEntity.vel.y === maxVel){
+      if (snowBallEntity.vel.y === maxSnowballVel){
         snowBallEntity.vel.setY(0);
       }
     break;
     case "a":
     case "A":
     case "ArrowLeft":
-      if (snowBallEntity.vel.x === -1*maxVel){
+      if (snowBallEntity.vel.x === -1*maxSnowballVel){
         snowBallEntity.vel.setX(0);
       }
     break;
     case "s":
     case "S":
     case "ArrowDown":
-      if (snowBallEntity.vel.y === -1*maxVel){
+      if (snowBallEntity.vel.y === -1*maxSnowballVel){
         snowBallEntity.vel.setY(0);
       }
     break;
     case "d":
     case "D":
     case "ArrowRight":
-      if (snowBallEntity.vel.x === maxVel){
+      if (snowBallEntity.vel.x === maxSnowballVel){
         snowBallEntity.vel.setX(0);
       }
     break;
@@ -116,12 +125,12 @@ bgTexture.rotation = THREE.MathUtils.degToRad(-90);
 const scene = new THREE.Scene();
 scene.background = bgTexture;
 
-const fov = 40;
+const fov = 50;
 const aspect = 2;  // the canvas default
 const near = 0.1;
 const far = 1000;
 const camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-camera.position.z = 100;
+camera.position.z = 150;
 
 {
   const color = 0xFFFFFF;
@@ -139,7 +148,7 @@ camera.position.z = 100;
 }
 
 
-// ADD GEOMETRIES
+// SNOWBALL
 {
   const radius = 5;
   const widthSegments = 8;
@@ -151,7 +160,34 @@ camera.position.z = 100;
   const snowBallMesh = new THREE.Mesh(snowBallGeom, snowBallMat);
   scene.add(snowBallMesh)
   snowBallEntity.entityMesh = snowBallMesh;
-  snowBallEntity.vel = new Vector2;
+}
+
+// FIREBALLS
+
+const fireBalls: Mesh[] = [];
+const fireBallGroup = new THREE.Object3D();
+scene.add(fireBallGroup);
+
+{
+  const radius = 5;
+  const widthSegments = 8;
+  const heightSegments = 8;
+  const fireBallGeom = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+  const fireBallMat = new THREE.MeshPhongMaterial({
+    color: 0xFF0000
+  });
+
+  for (let idx = 0; idx < 400; idx++){
+    const xPos = Math.random() * (2 * maxFireballPosX) - maxFireballPosX;
+    const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
+    const zPos = -12 * idx - 100;
+    const fireBallMesh = new THREE.Mesh(fireBallGeom, fireBallMat);
+    fireBallMesh.position.set(xPos, yPos, zPos);
+    fireBallGroup.add(fireBallMesh);
+    fireBalls.push(fireBallMesh);
+  }
+
+  
 }
 
 // MAIN PAGE
@@ -176,18 +212,23 @@ function PrimitivesDemoPage() {
         const elapsed = time - previousTimestamp;
         previousTimestamp = time;
 
+        // move fireballs
+        if(gameStart){
+          fireBallGroup.position.z += 0.2 * elapsed;
+        }
+
         snowBallEntity.entityMesh.position.add(
           new Vector3(snowBallEntity.vel.x, snowBallEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
         );
 
-        snowBallEntity.entityMesh.position.clamp(new Vector3(-50, -30, 0), new Vector3(50, 30, 0));
+        snowBallEntity.entityMesh.position.clamp(new Vector3(-1*maxSnowballPosX, -1*maxSnowballPosY, 0), new Vector3(maxSnowballPosX, maxSnowballPosY, 0));
 
         // reset vel and acc if snowball is at clamp edge
-        if (snowBallEntity.entityMesh.position.x === -50 || snowBallEntity.entityMesh.position.x === 50){
+        if (snowBallEntity.entityMesh.position.x === -1 * maxSnowballPosX || snowBallEntity.entityMesh.position.x === maxSnowballPosX){
           snowBallEntity.vel.setX(0);
         }
 
-        if (snowBallEntity.entityMesh.position.y === -30 || snowBallEntity.entityMesh.position.y === 30){
+        if (snowBallEntity.entityMesh.position.y === -1 * maxSnowballPosY || snowBallEntity.entityMesh.position.y === maxSnowballPosY){
           snowBallEntity.vel.setY(0);
         }
 
