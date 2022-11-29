@@ -54,9 +54,31 @@ function resizeRendererToDisplaySize(renderer:WebGLRenderer) {
   return needResize;
 }
 
+function resetGame(){
+  gameStarted = false;
+  gameOver = false;
+  gameWon = false;
+  obstacleGroup.position.set(0,0,0);
+  const fireballMat = collidedFireball?.material as MeshPhongMaterial;
+  fireballMat?.emissive?.setHex(0x440000);
+  playerEntity.entityObject3D.position.set(0, 0, 0);
+}
+
+function startGame(){
+  gameStarted = true;
+}
+
+function endGame(playerWon = false){
+  gameOver = true;
+  gameWon = playerWon;
+}
+
 function keyDownEventListener(e: KeyboardEvent){
-  if (!gameOver) {
-    gameStarted = true;
+  if (!gameStarted && !gameOver){
+    startGame();
+  }
+
+  if (gameStarted && !gameOver) {
     const downedKey = e.key;
     switch(downedKey) {
       case "w":
@@ -88,14 +110,8 @@ function keyDownEventListener(e: KeyboardEvent){
         }
       break;
     } 
-  } else {
-    gameStarted = false;
-    gameOver = false;
-    gameWon = false;
-    obstacleGroup.position.set(0,0,0);
-    const fireballMat = collidedFireball?.material as MeshPhongMaterial;
-    fireballMat?.emissive?.setHex(0x440000);
-    playerEntity.entityObject3D.position.set(0, 0, 0);
+  } else if (gameOver) {
+    resetGame();
   }
 }
 
@@ -262,13 +278,12 @@ function PrimitivesDemoPage() {
         const elapsed = time - previousTimestamp;
         previousTimestamp = time;
 
-        // move fireballs
         if(gameStarted && !gameOver){
+          // move fireballs
           obstacleGroup.position.z += fireballSpeed * elapsed;
+          // check if player won
           if (obstacleGroup.position.z >= lastRingPosZ){
-            gameOver = true;
-            gameWon = true;
-            setShowWinMessage(true);
+            endGame(true);
           }
 
           // detect collision
@@ -276,17 +291,16 @@ function PrimitivesDemoPage() {
             fireball.getWorldPosition(iterFireballWorldPos);
             snowball.getWorldPosition(snowballWorldPos);
             const distance = snowballWorldPos.distanceTo(iterFireballWorldPos);
-            // const fireballIsAhead = 
             if(distance < snowballRadius + fireballRadius){
               fireWhoosh.play();
               const fireballMat = fireball.material as MeshPhongMaterial;
               fireballMat.emissive.setHex(0xff0000);
               collidedFireball.copy(fireball);
-              gameOver = true;
-              setShowGameOver(true);
+              endGame();
             }
           })
 
+          // move player
           playerEntity.entityObject3D.position.add(
             new Vector3(playerEntity.vel.x, playerEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
           );
@@ -304,11 +318,11 @@ function PrimitivesDemoPage() {
           playerEntity.vel.setY(0);
         }
 
+        // update DOM via React
         setShowStartMessage(false);
         setShowGameOver(false);
         setShowWinMessage(false);
         
-        // update DOM
         if(!gameStarted){
           setShowStartMessage(true);
         } else if (gameWon) {
