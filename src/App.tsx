@@ -74,11 +74,11 @@ function endGame(playerWon = false){
 }
 
 function keyDownEventListener(e: KeyboardEvent){
-  if (!gameStarted && !gameOver){
+  if (!gameStarted){
     startGame();
   }
 
-  if (gameStarted && !gameOver) {
+  if (!gameOver) {
     const downedKey = e.key;
     switch(downedKey) {
       case "w":
@@ -110,7 +110,7 @@ function keyDownEventListener(e: KeyboardEvent){
         }
       break;
     } 
-  } else if (gameOver) {
+  } else {
     resetGame();
   }
 }
