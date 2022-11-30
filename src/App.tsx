@@ -22,7 +22,7 @@ const snowballRadius = 5;
 const fireballRadius = 20;
 
 const fireballNum = 500;
-const fireballSpeed = 0.3;
+const fireballSpeed = 0.6;
 const fireballSpacing = 40;
 
 const leadingDistance = 500;
@@ -31,12 +31,14 @@ const ringNum = 11;
 const ringSpacing = fireballNum * fireballSpacing / (ringNum - 1);
 const lastRingPosZ = ringSpacing * (ringNum - 1) + leadingDistance;
 
-const tunnelLength = lastRingPosZ;
 
 // FLAGS
 let gameStarted = false;
 let gameOver = false;
 let gameWon = false;
+
+// TIMES FOR ANIMATION LOOP
+let prevTime: number;
 
 // LOOKUP TARGETS
 const iterFireballWorldPos = new Vector3(); // for storing world pos of fireball when detecting collisions
@@ -62,7 +64,7 @@ function resetGame(){
   gameWon = false;
   obstacleGroup.position.set(0,0,0);
   const fireballMat = collidedFireball?.material as MeshPhongMaterial;
-  fireballMat?.emissive?.setHex(0x440000);
+  fireballMat?.emissive?.setHex(0x660000);
   playerEntity.entityObject3D.position.set(0, 0, 0);
 }
 
@@ -241,7 +243,7 @@ scene.add(obstacleGroup);
       fireballGeom,
       new THREE.MeshPhongMaterial({
         map: fireballTexture,
-        emissive: 0x440000
+        emissive: 0x660000
       }));
     fireballMesh.position.set(xPos, yPos, zPos);
     obstacleGroup.add(fireballMesh);
@@ -303,11 +305,12 @@ function PrimitivesDemoPage() {
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
 
-      let previousTimestamp = 0;
-      
-      function animate(time: number) {
-        const elapsed = time - previousTimestamp;
-        previousTimestamp = time;
+      function animate() {
+        // initialize prevTime
+        if (!prevTime){ prevTime = new Date().getTime(); }
+        
+        const elapsed = new Date().getTime() - prevTime;
+        prevTime = new Date().getTime();
 
         if(gameStarted && !gameOver){
           // move fireballs
@@ -319,7 +322,7 @@ function PrimitivesDemoPage() {
 
           // spin fireballs and detect collision
           fireballs.forEach((fireball, idx)=>{
-            fireball.rotation.y = ((idx % 4) + 1) * 0.0025 * time;
+            fireball.rotation.y += ((idx % 4) + 1) * 0.002 * elapsed;
 
             fireball.getWorldPosition(iterFireballWorldPos);
             snowball.getWorldPosition(snowballWorldPos);
@@ -335,7 +338,7 @@ function PrimitivesDemoPage() {
 
           // move player
           playerEntity.entityObject3D.position.add(
-            new Vector3(playerEntity.vel.x, playerEntity.vel.y, 0).multiplyScalar(elapsed * 0.06)
+            new Vector3(playerEntity.vel.x, playerEntity.vel.y, 0).multiplyScalar(elapsed * 0.15)
           );
         }
 
