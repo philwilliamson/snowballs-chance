@@ -76,45 +76,45 @@ function endGame(playerWon = false){
 }
 
 function keyDownEventListener(e: KeyboardEvent){
-  if (!gameStarted){
-    startGame();
-  }
 
-  if (!gameOver) {
-    const downedKey = e.key;
-    switch(downedKey) {
-      case "w":
-      case "W":
-      case "ArrowUp":
-        if (playerEntity.entityObject3D.position.y <= maxSnowballPosY) {
-          playerEntity.vel.setY(maxSnowballVel);
-        }
-      break;
-      case "a":
-      case "A":
-      case "ArrowLeft":
-        if (playerEntity.entityObject3D.position.x >= -1 * maxSnowballPosX) {
-          playerEntity.vel.setX(-1*maxSnowballVel);
-        }
-      break;
-      case "s":
-      case "S":
-      case "ArrowDown":
-        if (playerEntity.entityObject3D.position.y >= -1 * maxSnowballPosY) {
-          playerEntity.vel.setY(-1*maxSnowballVel);
-        }
-      break;
-      case "d":
-      case "D":
-      case "ArrowRight":
-        if (playerEntity.entityObject3D.position.x <= maxSnowballPosX) {
-          playerEntity.vel.setX(1*maxSnowballVel);
-        }
-      break;
-    } 
-  } else {
-    resetGame();
-  }
+  const downedKey = e.key;
+  switch(downedKey) {
+    case " ": // spacebar
+    if (!gameStarted){
+      startGame();
+    } else if (gameOver) {
+      resetGame();
+    }
+    break;
+    case "w":
+    case "W":
+    case "ArrowUp":
+      if (playerEntity.entityObject3D.position.y <= maxSnowballPosY) {
+        playerEntity.vel.setY(maxSnowballVel);
+      }
+    break;
+    case "a":
+    case "A":
+    case "ArrowLeft":
+      if (playerEntity.entityObject3D.position.x >= -1 * maxSnowballPosX) {
+        playerEntity.vel.setX(-1*maxSnowballVel);
+      }
+    break;
+    case "s":
+    case "S":
+    case "ArrowDown":
+      if (playerEntity.entityObject3D.position.y >= -1 * maxSnowballPosY) {
+        playerEntity.vel.setY(-1*maxSnowballVel);
+      }
+    break;
+    case "d":
+    case "D":
+    case "ArrowRight":
+      if (playerEntity.entityObject3D.position.x <= maxSnowballPosX) {
+        playerEntity.vel.setX(1*maxSnowballVel);
+      }
+    break;
+  } 
 }
 
 function keyUpEventListener(e: KeyboardEvent){
@@ -403,7 +403,7 @@ function PrimitivesDemoPage() {
             showStartMessage ? 
               <OverlayMessage 
                 headerString={`Snowball's Chance`}
-                subHeaderString={`Press Any Key to Start`}
+                subHeaderString={`Press Space Bar to Start`}
                 messageClassNames={`message game-start`}
               />
             :
@@ -411,13 +411,13 @@ function PrimitivesDemoPage() {
               ?
                 <OverlayMessage 
                   headerString={`You Win!`}
-                  subHeaderString={`Press Any Key to Play Again`}
+                  subHeaderString={`Press Space Bar to Play Again`}
                   messageClassNames={`message game-won`}
                 />
               :
                 showGameOver && <OverlayMessage 
                   headerString={`You Melted!`}
-                  subHeaderString={`Press Any Key to Restart`}
+                  subHeaderString={`Press Space Bar to Restart`}
                   messageClassNames={`message game-over`}
                 />
           }
