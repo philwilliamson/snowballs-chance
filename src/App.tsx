@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { Mesh, MeshPhongMaterial, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
+import { MathUtils, Mesh, MeshPhongMaterial, Object3D, Vector2, Vector3, WebGLRenderer } from 'three';
 import WebGL from './util/webGlChecker';
 import "./App.css"
 import OverlayMessage from './components/OverlayMessage';
@@ -31,6 +31,8 @@ const ringNum = 11;
 const ringSpacing = fireballNum * fireballSpacing / (ringNum - 1);
 const lastRingPosZ = ringSpacing * (ringNum - 1) + leadingDistance;
 
+const tunnelLength = lastRingPosZ;
+
 // FLAGS
 let gameStarted = false;
 let gameOver = false;
@@ -39,7 +41,7 @@ let gameWon = false;
 // LOOKUP TARGETS
 const iterFireballWorldPos = new Vector3(); // for storing world pos of fireball when detecting collisions
 const snowballWorldPos = new Vector3(); // for storing world pos of snowball when detecting collisions
-const collidedFireball = new Mesh();
+const collidedFireball = new Mesh(); // for storing the fireball that's been collided with
 
 
 // HELPERS
@@ -151,10 +153,25 @@ function keyUpEventListener(e: KeyboardEvent){
 
 // TEXTURES
 const loader = new THREE.TextureLoader();
-const bgTexture = loader.load('/textures/sky_dark.jpg');
+const bgTexture = loader.load('/textures/sky.jpg');
 bgTexture.center.set(.5, .5);
 bgTexture.rotation = THREE.MathUtils.degToRad(-90);
 
+const tunnelTexture = loader.load('/textures/solid_lava.png');
+const ringTexture = tunnelTexture.clone();
+
+tunnelTexture.wrapS = THREE.RepeatWrapping;
+tunnelTexture.wrapT = THREE.RepeatWrapping;
+tunnelTexture.repeat.set(4,40);
+
+ringTexture.wrapS = THREE.RepeatWrapping;
+ringTexture.repeat.set(3,1);
+
+const fireballTexture = loader.load('/textures/melted_lava.png');
+fireballTexture.rotation = THREE.MathUtils.degToRad(90);
+fireballTexture.wrapS = THREE.RepeatWrapping;
+fireballTexture.wrapT = THREE.RepeatWrapping;
+fireballTexture.repeat.set(1,2);
 // SCENE
 const scene = new THREE.Scene();
 scene.background = bgTexture;
@@ -223,7 +240,7 @@ scene.add(obstacleGroup);
     const fireballMesh = new THREE.Mesh(
       fireballGeom,
       new THREE.MeshPhongMaterial({
-        color: 0xFF0000,
+        map: fireballTexture,
         emissive: 0x440000
       }));
     fireballMesh.position.set(xPos, yPos, zPos);
@@ -243,11 +260,25 @@ scene.add(obstacleGroup);
     const ringMesh = new THREE.Mesh(
       new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments),
     new THREE.MeshPhongMaterial({
-      color: 0xFF0000,
+      map: ringTexture,
     }));
     ringMesh.position.set(0, 0, zPos);
     obstacleGroup.add(ringMesh);
   }  
+}
+
+// TUNNEL
+{
+  const tunnelGeom = new THREE.CylinderGeometry( 200, 200, lastRingPosZ, 32, 1, true );
+  const tunnelMat = new THREE.MeshPhongMaterial({
+    // color: 0xffff00, 
+    map: tunnelTexture,
+    side: THREE.BackSide
+  });
+  const tunnel = new THREE.Mesh( tunnelGeom, tunnelMat );
+  tunnel.rotation.x = MathUtils.degToRad(90);
+  tunnel.position.z = -1 * lastRingPosZ / 2
+  obstacleGroup.add(tunnel);
 }
 
 // AUDIO
@@ -286,8 +317,10 @@ function PrimitivesDemoPage() {
             endGame(true);
           }
 
-          // detect collision
-          fireballs.forEach((fireball)=>{
+          // spin fireballs and detect collision
+          fireballs.forEach((fireball, idx)=>{
+            fireball.rotation.y = ((idx % 4) + 1) * 0.0025 * time;
+
             fireball.getWorldPosition(iterFireballWorldPos);
             snowball.getWorldPosition(snowballWorldPos);
             const distance = snowballWorldPos.distanceTo(iterFireballWorldPos);
