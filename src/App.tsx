@@ -291,7 +291,6 @@ scene.add(obstacleGroup);
 {
   const tunnelGeom = new THREE.CylinderGeometry( 200, 200, lastRingPosZ, 32, 1, true );
   const tunnelMat = new THREE.MeshPhongMaterial({
-    // color: 0xffff00, 
     map: tunnelTexture,
     side: THREE.BackSide
   });
@@ -329,8 +328,6 @@ function PrimitivesDemoPage() {
 
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
-
-      // TEXTURE LOADER CALLBACK
 
       let playDelay = setTimeout(()=>{
           gameLoaded = true;
