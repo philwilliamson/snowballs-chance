@@ -4,6 +4,7 @@ import { MathUtils, Mesh, MeshPhongMaterial, Object3D, Vector2, Vector3, WebGLRe
 import WebGL from './util/webGlChecker';
 import "./App.css"
 import OverlayMessage from './components/OverlayMessage';
+import IntroMessage from './components/IntroMessage';
 
 interface PlayerEntity {
   entityObject3D: Object3D,
@@ -448,12 +449,14 @@ function PrimitivesDemoPage() {
                 promptString={`Press Space Bar to Start`}
                 showPrompt={showPlayPrompt}
                 messageClassNames={`message game-start`}
-              />
+              >
+                <IntroMessage/>
+              </OverlayMessage>
             :
               showWinMessage
               ?
                 <OverlayMessage 
-                  headerString={`You Win!`}
+                  headerString={`You Escaped!`}
                   promptString={`Press Space Bar to Play Again`}
                   messageClassNames={`message game-won`}
                 />
