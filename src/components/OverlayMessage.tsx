@@ -1,17 +1,19 @@
 const OverlayMessage = ({
     headerString,
-    subHeaderString = "",
+    promptString = "",
+    showPrompt = true,
     messageClassNames
 
 }: {
     headerString: string;
-    subHeaderString?: string;
+    promptString?: string;
+    showPrompt?: boolean;
     messageClassNames: string;
 }) => {
     return (
         <div className={messageClassNames}>
             <h1>{headerString}</h1>
-            <h3>{subHeaderString}</h3>
+            <h3>{ showPrompt && promptString}</h3>
         </div>
     )
 }

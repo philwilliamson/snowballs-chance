@@ -33,6 +33,7 @@ const lastRingPosZ = ringSpacing * (ringNum - 1) + leadingDistance;
 
 
 // FLAGS
+let gameLoaded = false;
 let gameStarted = false;
 let gameOver = false;
 let gameWon = false;
@@ -87,7 +88,7 @@ function keyDownEventListener(e: KeyboardEvent){
   const downedKey = e.key;
   switch(downedKey) {
     case " ": // spacebar
-    if (!gameStarted){
+    if (!gameStarted && gameLoaded){
       startGame();
     } else if (gameOver) {
       resetGame();
@@ -159,7 +160,9 @@ function keyUpEventListener(e: KeyboardEvent){
 }
 
 // TEXTURES
-const loader = new THREE.TextureLoader();
+const loadManager = new THREE.LoadingManager();
+const loader = new THREE.TextureLoader(loadManager);
+
 const bgTexture = loader.load('/textures/sky.jpg');
 bgTexture.center.set(.5, .5);
 bgTexture.rotation = THREE.MathUtils.degToRad(-90);
@@ -262,13 +265,16 @@ scene.add(obstacleGroup);
   const tubeRadius = 30;
   const radialSegments = 8;
   const tubularSegments = 24;
+  const ringGeom = new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments)
+  const ringMat = new THREE.MeshPhongMaterial({
+    map: ringTexture,
+  })
   for (let idx = 0; idx < ringNum; idx++){
     const zPos = -1 * ringSpacing * idx - 500;
     const ringMesh = new THREE.Mesh(
-      new THREE.TorusGeometry(radius, tubeRadius, radialSegments, tubularSegments),
-    new THREE.MeshPhongMaterial({
-      map: ringTexture,
-    }));
+      ringGeom,
+      ringMat
+    );
     ringMesh.position.set(0, 0, zPos);
     obstacleGroup.add(ringMesh);
   }  
@@ -294,11 +300,14 @@ fireWhoosh.loop = false;
 
 // MAIN PAGE
 function PrimitivesDemoPage() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   const [showStartMessage, setShowStartMessage] = useState(true);
   const [showGameOver, setShowGameOver] = useState(false);
   const [showWinMessage, setShowWinMessage] = useState(false);
+  const [showPlayPrompt, setShowPlayPrompt] = useState(false);
 
   useEffect(() => {
     if ( WebGL.isWebGLAvailable() ) {
@@ -309,6 +318,28 @@ function PrimitivesDemoPage() {
 
       window.addEventListener("keydown", keyDownEventListener);
       window.addEventListener("keyup", keyUpEventListener);
+
+      // TEXTURE LOADER CALLBACK
+
+      let playDelay: number;
+
+      loadManager.onLoad = () => {
+        playDelay = setTimeout(()=>{
+          gameLoaded = true;
+          setShowPlayPrompt(true);
+        }, 3000);
+
+        if (loadingRef.current) {
+          loadingRef.current.style.display = 'none';
+        }
+      };
+
+      loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
+        const progress = itemsLoaded / itemsTotal;
+        if (progressBarRef.current) {
+          progressBarRef.current.style.transform = `scaleX(${progress})`;
+        }
+      };
 
       function animate() {
         // initialize prevTime
@@ -392,6 +423,9 @@ function PrimitivesDemoPage() {
         // remove event listeners
         window.removeEventListener("keydown", keyDownEventListener);
         window.removeEventListener("keyup", keyUpEventListener);
+
+        // clear timeout
+        clearTimeout(playDelay);
       }
 
     } else {
@@ -411,7 +445,8 @@ function PrimitivesDemoPage() {
             showStartMessage ? 
               <OverlayMessage 
                 headerString={`Snowball's Chance`}
-                subHeaderString={`Press Space Bar to Start`}
+                promptString={`Press Space Bar to Start`}
+                showPrompt={showPlayPrompt}
                 messageClassNames={`message game-start`}
               />
             :
@@ -419,16 +454,22 @@ function PrimitivesDemoPage() {
               ?
                 <OverlayMessage 
                   headerString={`You Win!`}
-                  subHeaderString={`Press Space Bar to Play Again`}
+                  promptString={`Press Space Bar to Play Again`}
                   messageClassNames={`message game-won`}
                 />
               :
                 showGameOver && <OverlayMessage 
                   headerString={`You Melted!`}
-                  subHeaderString={`Press Space Bar to Restart`}
+                  promptString={`Press Space Bar to Restart`}
                   messageClassNames={`message game-over`}
                 />
           }
+        </div>
+        <div ref={loadingRef} id="loading">
+          <h1>Loading...</h1>
+          <div className="progress">
+            <div className="progressbar"/>
+          </div>
         </div>
       </div>
       
