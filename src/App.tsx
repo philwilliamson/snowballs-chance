@@ -168,8 +168,7 @@ function keyUpEventListener(e: KeyboardEvent){
 }
 
 // TEXTURES
-const loadManager = new THREE.LoadingManager();
-const loader = new THREE.TextureLoader(loadManager);
+const loader = new THREE.TextureLoader();
 
 const bgTexture = loader.load('./textures/sky.jpg');
 bgTexture.center.set(.5, .5);
@@ -333,26 +332,10 @@ function PrimitivesDemoPage() {
 
       // TEXTURE LOADER CALLBACK
 
-      let playDelay: number;
-
-      loadManager.onLoad = () => {
-
-        if (loadingRef.current) {
-          loadingRef.current.style.display = 'none';
-        }
-
-        playDelay = setTimeout(()=>{
+      let playDelay = setTimeout(()=>{
           gameLoaded = true;
           setShowPlayPrompt(true);
         }, 3000);
-      };
-
-      loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
-        const progress = itemsLoaded / itemsTotal;
-        if (progressBarRef.current) {
-          progressBarRef.current.style.transform = `scaleX(${progress})`;
-        }
-      };
 
       function animate() {
         // initialize prevTime
@@ -479,12 +462,6 @@ function PrimitivesDemoPage() {
                   messageClassNames={`message game-over`}
                 />
           }
-        </div>
-        <div ref={loadingRef} id="loading">
-          <h1>Loading...</h1>
-          <div className="progress">
-            <div className="progressbar"/>
-          </div>
         </div>
       </div>
       
