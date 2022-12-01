@@ -7,6 +7,7 @@ const IntroMessage = () => {
             <p>For whatever reason, you are being doomed to an eternity of thermodynamic suffering, to be melted and refrozen over and over again. </p>
             <p>But what's this? Graced by a compassionate force, you feel a cool wind lift you up and away from the terrible, <span className="red-text">scorching</span> ground below.</p>
             <p>Perhaps you are not doomed after all, IF you can navigate the <span className="red-text">blazing orbs</span> separating you from salvation...</p>
+            <p>Use Arrow keys or W, A, S, D keys to fly around and avoid obstacles.</p>
         </div>
     )
 }

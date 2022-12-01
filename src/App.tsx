@@ -171,11 +171,11 @@ function keyUpEventListener(e: KeyboardEvent){
 const loadManager = new THREE.LoadingManager();
 const loader = new THREE.TextureLoader(loadManager);
 
-const bgTexture = loader.load('/textures/sky.jpg');
+const bgTexture = loader.load('./textures/sky.jpg');
 bgTexture.center.set(.5, .5);
 bgTexture.rotation = THREE.MathUtils.degToRad(-90);
 
-const tunnelTexture = loader.load('/textures/solid_lava.png');
+const tunnelTexture = loader.load('./textures/solid_lava.png');
 const ringTexture = tunnelTexture.clone();
 
 tunnelTexture.wrapS = THREE.RepeatWrapping;
@@ -185,7 +185,7 @@ tunnelTexture.repeat.set(4,40);
 ringTexture.wrapS = THREE.RepeatWrapping;
 ringTexture.repeat.set(3,1);
 
-const fireballTexture = loader.load('/textures/melted_lava.png');
+const fireballTexture = loader.load('./textures/melted_lava.png');
 fireballTexture.rotation = THREE.MathUtils.degToRad(90);
 fireballTexture.wrapS = THREE.RepeatWrapping;
 fireballTexture.wrapT = THREE.RepeatWrapping;
@@ -303,11 +303,11 @@ scene.add(obstacleGroup);
 }
 
 // AUDIO
-const fireWhoosh = new Audio('/sounds/fire_whoosh.wav');
+const fireWhoosh = new Audio('./sounds/fire_whoosh.wav');
 fireWhoosh.loop = false;
 fireWhoosh.volume = 0.5;
 
-const playMusic = new Audio('/music/HoliznaCC0-DearMrSuperComputer.mp3');
+const playMusic = new Audio('./music/HoliznaCC0-DearMrSuperComputer.mp3');
 playMusic.volume = 0.2;
 
 // MAIN PAGE

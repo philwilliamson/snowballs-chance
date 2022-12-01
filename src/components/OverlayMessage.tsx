@@ -21,7 +21,7 @@ const OverlayMessage = ({
             <div className="promptContainer">
                 { showPrompt ? 
                     <h3>{promptString}</h3>
-                :   <img src="/snowball.png"/>
+                :   <img src="./snowball.png"/>
                 
                 }
             </div>
