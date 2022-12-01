@@ -6,6 +6,45 @@ This game was developed for the [Game Off 2022](https://itch.io/jam/game-off-202
 
 Built using [Three.js](https://threejs.org/), [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/).
 
+## How to Play
+
+### How to Play Locally
+
+Clone this repository
+```shell
+git clone https://github.com/philwilliamson/snowballs-chance
+```
+
+`cd` into the new, local repository
+
+```shell
+cd snowballs-chance
+```
+
+Install dependencies
+
+```shell
+npm i
+```
+
+**Note**: If you wish to use a different Node.js package manager, such as `yarn`, try removing `package-lock.json` from the project directory and installing dependencies with the package manager of your choice.
+
+e.g.
+
+```shell
+rm package-lock.json
+yarn install
+```
+
+Start the dev server
+
+```bash
+npm run dev # or `yarn run dev` if you are using yarn
+```
+
+Open a browser and navigate to http://localhost:5173/ to enjoy the game!
+
+That should be sufficient to get the game running locally. See [Vite's documentation](https://vitejs.dev/) for more on how to run and build projects made with Vite.
 
 ## Asset Credits
 ### Music
