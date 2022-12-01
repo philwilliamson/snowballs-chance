@@ -66,6 +66,11 @@ function resetGame(){
   const fireballMat = collidedFireball?.material as MeshPhongMaterial;
   fireballMat?.emissive?.setHex(0x660000);
   playerEntity.entityObject3D.position.set(0, 0, 0);
+  fireballs.forEach((fireball) => {
+    const xPos = Math.random() * (2 * maxFireballPosX) - maxFireballPosX;
+    const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
+    fireball.position.setX(xPos).setY(yPos);
+  })
 }
 
 function startGame(){
