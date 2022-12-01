@@ -9,11 +9,10 @@ Built using [Three.js](https://threejs.org/), [React](https://reactjs.org/), [Ty
 
 ## Asset Credits
 ### Music
-["Halloween Soundscape"](https://freemusicarchive.org/music/holiznacc0/horseless-headman-halloween-beats/halloween-soundscape/) by HoliznaCC0 - Distributed via [Free Music Archive](https://freemusicarchive.org/home)
+["Dear Mr Super Computer "](https://freemusicarchive.org/music/holiznacc0/power-pop/dear-mr-super-computer/) by HoliznaCC0 - Distributed via [Free Music Archive](https://freemusicarchive.org/home)
 
-["Red Skies"](https://freemusicarchive.org/music/holiznacc0/chiptunes/red-skies/) by HoliznaCC0 - Distributed via [Free Music Archive](https://freemusicarchive.org/home)
 ### Sounds
-[fire whoosh sound effect](https://freesound.org/people/EpicSoundEffects/sounds/475879/) by EpicSoundEffects - Distributed via [Freesond](https://freesound.org/)
+[fire whoosh sound effect](https://freesound.org/people/EpicSoundEffects/sounds/475879/) by EpicSoundEffects - Distributed via [Freesound](https://freesound.org/)
 
 ### Images and Textures
 [snowball.png](https://opengameart.org/content/snowball-pixel-art) by alf0186 - Distributed via [OpenGameArt.org](https://opengameart.org/)

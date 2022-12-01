@@ -73,10 +73,17 @@ function resetGame(){
     const yPos = Math.random() * (2 * maxFireballPosY) - maxFireballPosY;
     fireball.position.setX(xPos).setY(yPos);
   })
+
+  playMusic.currentTime = 0;
 }
 
 function startGame(){
   gameStarted = true;
+
+  // stop intro music
+
+  playMusic.play();
+
 }
 
 function endGame(playerWon = false){
@@ -298,6 +305,10 @@ scene.add(obstacleGroup);
 // AUDIO
 const fireWhoosh = new Audio('/sounds/fire_whoosh.wav');
 fireWhoosh.loop = false;
+fireWhoosh.volume = 0.5;
+
+const playMusic = new Audio('/music/HoliznaCC0-DearMrSuperComputer.mp3');
+playMusic.volume = 0.2;
 
 // MAIN PAGE
 function PrimitivesDemoPage() {
@@ -325,14 +336,15 @@ function PrimitivesDemoPage() {
       let playDelay: number;
 
       loadManager.onLoad = () => {
-        playDelay = setTimeout(()=>{
-          gameLoaded = true;
-          setShowPlayPrompt(true);
-        }, 3000);
 
         if (loadingRef.current) {
           loadingRef.current.style.display = 'none';
         }
+
+        playDelay = setTimeout(()=>{
+          gameLoaded = true;
+          setShowPlayPrompt(true);
+        }, 3000);
       };
 
       loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
@@ -359,7 +371,7 @@ function PrimitivesDemoPage() {
 
           // spin fireballs and detect collision
           fireballs.forEach((fireball, idx)=>{
-            fireball.rotation.y += ((idx % 4) + 1) * 0.002 * elapsed;
+            fireball.rotation.z += ((idx % 4) + 1) * 0.002 * elapsed;
 
             fireball.getWorldPosition(iterFireballWorldPos);
             snowball.getWorldPosition(snowballWorldPos);
