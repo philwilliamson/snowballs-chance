@@ -8,7 +8,7 @@ Built using [Three.js](https://threejs.org/), [React](https://reactjs.org/), [Ty
 
 ## How to Play
 
-This game can be plated on [itch.io](https://clumsytank.itch.io/snowballs-chance).
+This game can be played on [itch.io](https://clumsytank.itch.io/snowballs-chance).
 
 ### How to Play Locally
 
