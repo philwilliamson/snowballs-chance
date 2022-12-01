@@ -176,7 +176,7 @@ bgTexture.center.set(.5, .5);
 bgTexture.rotation = THREE.MathUtils.degToRad(-90);
 
 const tunnelTexture = loader.load('./textures/solid_lava.png');
-const ringTexture = tunnelTexture.clone();
+const ringTexture = loader.load('./textures/solid_lava.png');
 
 tunnelTexture.wrapS = THREE.RepeatWrapping;
 tunnelTexture.wrapT = THREE.RepeatWrapping;
