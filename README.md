@@ -1,4 +1,4 @@
-# WIP - Snowball's Chance
+# Snowball's Chance
 
 An arcade-style on-rails flight game where you play as a snowball ascending out of an infernal dimension, avoiding obstacles along the way. 
 
